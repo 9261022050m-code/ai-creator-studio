@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI Creator Studio</title>
+<style>
+:root{
+  --ink:#04060E; --navy:#0B1530; --navy2:#12214A; --line:#22345F;
+  --white:#F5F8FF; --mute:#8D9BBF; --blue:#7FB0FF; --loss:#FF8A8A;
+  color-scheme:dark; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:radial-gradient(1200px 600px at 80% -10%,#14275A 0%,transparent 60%),var(--ink);
+  color:var(--white);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,Helvetica,Arial,sans-serif;line-height:1.5;min-height:100vh}
+.wrap{max-width:1040px;margin:0 auto;padding:28px 18px 48px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+h1{font-size:clamp(28px,5vw,44px);font-weight:800;letter-spacing:-.02em;margin:0;line-height:1.1}
+.sub{color:var(--mute);margin:6px 0 0;font-size:15px}
+.cur{display:flex;gap:6px;align-items:center;color:var(--mute);font-size:14px}
+.chip{border:1px solid var(--line);background:transparent;color:var(--white);border-radius:10px;min-width:44px;height:44px;font:inherit;font-weight:700;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--white);color:var(--ink);border-color:var(--white)}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;background:var(--navy);border:1px solid var(--line);padding:6px;border-radius:18px;margin-bottom:20px}
+.tab{border:0;background:transparent;color:var(--mute);font:inherit;font-weight:700;font-size:15px;padding:14px 8px;border-radius:13px;cursor:pointer;min-height:52px}
+.tab[aria-selected=true]{background:var(--navy2);color:var(--white);box-shadow:inset 0 0 0 1px var(--blue)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+@media(max-width:820px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--navy);border:1px solid var(--line);border-radius:22px;padding:22px}
+.panel h2{font-size:18px;margin:0 0 16px;font-weight:700}
+.field{margin-bottom:16px}
+label{display:block;font-size:14px;color:var(--mute);margin-bottom:6px}
+.inp{display:flex;align-items:center;background:var(--ink);border:1px solid var(--line);border-radius:14px;padding:0 14px}
+.inp:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(127,176,255,.25)}
+.inp input{flex:1;min-width:0;background:transparent;border:0;outline:0;color:var(--white);font:inherit;font-size:18px;font-weight:600;height:54px}
+.inp span{color:var(--mute);font-weight:700;margin-left:8px}
+.inp input::placeholder{color:#4A5A82;font-weight:500}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-top:1px solid var(--line)}
+.sw b{font-weight:700;font-size:15px}.sw small{display:block;color:var(--mute);font-size:13px}
+.tg{position:relative;width:54px;height:32px;flex:none;border-radius:20px;border:1px solid var(--line);background:var(--ink);cursor:pointer;padding:0}
+.tg::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--mute);transition:transform .2s,background .2s}
+.tg[aria-checked=true]{background:var(--blue);border-color:var(--blue)}
+.tg[aria-checked=true]::after{transform:translateX(22px);background:var(--ink)}
+.sub-f{display:none;padding-bottom:6px}.sub-f.on{display:block}
+.row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}
+.row span:first-child{color:var(--mute)}.row span:last-child{font-weight:700;text-align:right}
+.hero{padding:20px 0 6px}
+.hero .t{color:var(--mute);font-size:14px}
+.big{font-size:clamp(38px,8vw,60px);font-weight:800;letter-spacing:-.03em;line-height:1.1;color:var(--white);word-break:break-word}
+.big.neg{color:var(--loss)}.big.empty{color:#3B4B75}
+.note{color:var(--mute);font-size:13px;margin:14px 0 0}
+.reset{margin-top:18px;width:100%;min-height:52px;border-radius:14px;border:1px solid var(--line);background:transparent;color:var(--white);font:inherit;font-weight:700;font-size:16px;cursor:pointer}
+.reset:hover,.chip:hover{border-color:var(--blue)}
+button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.save{margin-top:16px;width:100%;min-height:54px;border-radius:14px;border:0;background:var(--white);color:var(--ink);font:inherit;font-weight:800;font-size:16px;cursor:pointer}
+.save:disabled{opacity:.35;cursor:not-allowed}
+.msg{color:var(--mute);font-size:13px;margin:8px 0 0}
+.cmp-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.cmp-head h2{margin:0}
+.ghost{min-height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--white);font:inherit;font-weight:700;cursor:pointer}
+.ghost:hover{border-color:var(--blue)}
+.ghost:disabled{opacity:.35;cursor:not-allowed}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;min-width:560px;border-collapse:collapse;font-size:15px}
+th,td{padding:12px 10px;text-align:right;border-bottom:1px solid var(--line);vertical-align:top}
+th:first-child,td:first-child{text-align:left;color:var(--mute);font-weight:500}
+thead th{color:var(--white);font-weight:700;border-bottom:1px solid var(--blue)}
+td{font-weight:700}td.empty{color:#3B4B75;font-weight:500}
+td.best{color:var(--ink);background:var(--blue)}
+td.neg{color:var(--loss)}
+.del{display:block;margin:6px 0 0 auto;min-height:36px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--mute);font:inherit;font-size:13px;cursor:pointer}
+.del:hover{border-color:var(--loss);color:var(--loss)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>AI Creator Studio</h1>
+      <p class="sub">Посчитайте стоимость заказа и прибыль. Все цифры вводите вы сами.</p>
+    </div>
+    <div class="cur" role="group" aria-label="Валюта">Валюта
+      <button class="chip" data-cur="₽" aria-pressed="true">₽</button>
+      <button class="chip" data-cur="$" aria-pressed="false">$</button>
+      <button class="chip" data-cur="€" aria-pressed="false">€</button>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Категория услуг">
+    <button class="tab" role="tab" aria-selected="true">AI-изображения</button>
+    <button class="tab" role="tab" aria-selected="false">Рекламные Reels</button>
+    <button class="tab" role="tab" aria-selected="false">Анимационные видео</button>
+  </div>
+
+  <div class="grid">
+    <section class="panel" aria-label="Параметры заказа">
+      <h2 id="ttl">Параметры заказа</h2>
+      <div class="field"><label for="qty" id="qtyL">Количество работ</label>
+        <div class="inp"><input id="qty" inputmode="decimal" placeholder="0" autocomplete="off"><span>шт.</span></div></div>
+      <div class="field"><label for="price">Стоимость одной работы</label>
+        <div class="inp"><input id="price" inputmode="decimal" placeholder="0" autocomplete="off"><span class="c"></span></div></div>
+      <div class="field"><label for="per">Расходы на одну работу (сервисы, подписки)</label>
+        <div class="inp"><input id="per" inputmode="decimal" placeholder="0" autocomplete="off"><span class="c"></span></div></div>
+      <div class="field"><label for="fixed">Общие дополнительные расходы на заказ</label>
+        <div class="inp"><input id="fixed" inputmode="decimal" placeholder="0" autocomplete="off"><span class="c"></span></div></div>
+
+      <div class="sw"><div><b>Наценка за срочность</b><small>Добавляется к стоимости заказа</small></div>
+        <button class="tg" role="switch" aria-checked="false" aria-label="Наценка за срочность" id="tgU"></button></div>
+      <div class="sub-f" id="subU"><div class="field"><label for="uPct">Размер наценки</label>
+        <div class="inp"><input id="uPct" inputmode="decimal" placeholder="0" autocomplete="off"><span>%</span></div></div></div>
+
+      <div class="sw"><div><b>Учесть налог</b><small>Считается от стоимости заказа</small></div>
+        <button class="tg" role="switch" aria-checked="false" aria-label="Учесть налог" id="tgT"></button></div>
+      <div class="sub-f" id="subT"><div class="field"><label for="tPct">Ставка налога</label>
+        <div class="inp"><input id="tPct" inputmode="decimal" placeholder="0" autocomplete="off"><span>%</span></div></div></div>
+
+      <button class="reset" id="reset">Сбросить всё</button>
+    </section>
+
+    <section class="panel" aria-label="Результат" aria-live="polite">
+      <h2>Результат</h2>
+      <div class="hero"><div class="t">Стоимость заказа</div><div class="big empty" id="total">—</div></div>
+      <div class="row"><span id="rwL">Работы</span><span id="rw">—</span></div>
+      <div class="row"><span>Наценка за срочность</span><span id="ur">—</span></div>
+      <div class="row"><span>Расходы</span><span id="ex">—</span></div>
+      <div class="row"><span>Налог</span><span id="tx">—</span></div>
+      <div class="hero" style="padding-top:22px"><div class="t">Предполагаемая прибыль</div><div class="big empty" id="profit">—</div></div>
+      <div class="row" style="border:0"><span>Маржа</span><span id="mg">—</span></div>
+      <button class="save" id="save" disabled>Сохранить расчёт</button>
+      <p class="msg" id="saveMsg"></p>
+      <p class="note">Прибыль = стоимость заказа − расходы − налог. Это оценка по введённым вами данным.</p>
+    </section>
+  </div>
+  <section class="panel" style="margin-top:20px" aria-label="Сравнение расчётов">
+    <div class="cmp-head"><h2>Сравнение расчётов</h2><button class="ghost" id="clearAll">Очистить таблицу</button></div>
+    <div class="scroll"><table id="cmp"></table></div>
+    <p class="note" id="cmpNote">Сохраните до трёх расчётов, чтобы сравнить их. Лучшая прибыль подсвечивается синим.</p>
+  </section>
+</div>
+
+<script>
+(function(){
+  var cats=[
+    {n:'AI-изображения',u:'изображений',rw:'Изображения'},
+    {n:'Рекламные Reels',u:'Reels',rw:'Reels'},
+    {n:'Анимационные видео',u:'видео',rw:'Видео'}
+  ];
+  function blank(){return {qty:'',price:'',per:'',fixed:'',u:false,uPct:'',t:false,tPct:''};}
+  var data=[blank(),blank(),blank()], cat=0, cur='₽';
+  var $=function(id){return document.getElementById(id)};
+  var ids=['qty','price','per','fixed','uPct','tPct'];
+  var tabs=[].slice.call(document.querySelectorAll('.tab'));
+
+  function num(s){var v=parseFloat(String(s).replace(/\s/g,'').replace(',','.'));return isFinite(v)&&v>0?v:0;}
+  function fmt(v){return Math.round(v*100)/100===Math.round(v)?Math.round(v).toLocaleString('ru-RU'):v.toLocaleString('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2});}
+  function money(v){return fmt(v)+' '+cur;}
+
+  function load(){
+    var d=data[cat];
+    $('qty').value=d.qty;$('price').value=d.price;$('per').value=d.per;$('fixed').value=d.fixed;
+    $('uPct').value=d.uPct;$('tPct').value=d.tPct;
+    $('tgU').setAttribute('aria-checked',d.u);$('tgT').setAttribute('aria-checked',d.t);
+    $('subU').classList.toggle('on',d.u);$('subT').classList.toggle('on',d.t);
+    $('qtyL').textContent='Количество '+cats[cat].u;
+    $('rwL').textContent=cats[cat].rw;
+    $('ttl').textContent=cats[cat].n;
+    tabs.forEach(function(t,i){t.setAttribute('aria-selected',i===cat)});
+    calc();
+  }
+  function setBig(el,v,neg){el.textContent=v;el.className='big'+(v==='—'?' empty':'')+(neg?' neg':'');}
+  function compute(d){
+    var q=num(d.qty),p=num(d.price),base=q*p,ur=d.u?base*num(d.uPct)/100:0,total=base+ur;
+    var ex=num(d.fixed)+num(d.per)*q,tx=d.t?total*num(d.tPct)/100:0,profit=total-ex-tx;
+    return {q:q,p:p,base:base,ur:ur,total:total,ex:ex,tx:tx,profit:profit,mg:total?Math.round(profit/total*1000)/10:null};
+  }
+  var saved=[null,null,null];
+  function refreshSave(){
+    var d=data[cat],ok=num(d.qty)&&num(d.price),free=saved.indexOf(null);
+    $('save').disabled=!(ok&&free>-1);
+    $('saveMsg').textContent=!ok?'Введите количество и цену, чтобы сохранить расчёт.':(free<0?'Все 3 ячейки заняты. Удалите один расчёт в таблице ниже.':'Расчёт сохранится в ячейку «Расчёт '+(free+1)+'».');
+  }
+  function saveCalc(){
+    var d=data[cat],free=saved.indexOf(null);
+    if(!(num(d.qty)&&num(d.price))||free<0)return;
+    var r=compute(d);r.cat=cats[cat].n;r.cur=cur;
+    saved[free]=r;renderSaved();refreshSave();
+  }
+  function renderSaved(){
+    var f=saved.filter(Boolean),best=-1,same=f.every(function(s){return s.cur===f[0].cur});
+    if(f.length>1&&same){var m=-Infinity;saved.forEach(function(s,i){if(s&&s.profit>m){m=s.profit;best=i}});}
+    var mo=function(s,v){return fmt(v)+' '+s.cur};
+    var rows=[
+      ['Категория',function(s){return s.cat}],
+      ['Количество',function(s){return fmt(s.q)}],
+      ['Цена одной работы',function(s){return mo(s,s.p)}],
+      ['Наценка за срочность',function(s){return mo(s,s.ur)}],
+      ['Стоимость заказа',function(s){return mo(s,s.total)}],
+      ['Расходы',function(s){return mo(s,s.ex)}],
+      ['Налог',function(s){return mo(s,s.tx)}],
+      ['Прибыль',function(s){return (s.profit<0?'−':'')+mo(s,Math.abs(s.profit))}],
+      ['Маржа',function(s){return s.mg===null?'—':s.mg.toLocaleString('ru-RU')+' %'}]
+    ];
+    var h='<thead><tr><th></th>';
+    saved.forEach(function(s,i){h+='<th>Расчёт '+(i+1)+(s?'<button class="del" data-del="'+i+'">Удалить</button>':'')+'</th>'});
+    h+='</tr></thead><tbody>';
+    rows.forEach(function(r,ri){
+      h+='<tr><th scope="row">'+r[0]+'</th>';
+      saved.forEach(function(s,i){
+        if(!s){h+='<td class="empty">'+(ri===0?'Пусто':'—')+'</td>';return;}
+        var c=ri===7?(i===best?'best':(s.profit<0?'neg':'')):'';
+        h+='<td'+(c?' class="'+c+'"':'')+'>'+r[1](s)+'</td>';
+      });
+      h+='</tr>';
+    });
+    $('cmp').innerHTML=h+'</tbody>';
+    $('cmpNote').textContent=(f.length>1&&!same)?'В сохранённых расчётах разные валюты, поэтому прибыль не подсвечивается: суммы нельзя сравнивать напрямую.':'Сохраните до трёх расчётов, чтобы сравнить их. Лучшая прибыль подсвечивается синим.';
+    $('clearAll').disabled=!f.length;
+  }
+  function calc(){
+    var d=data[cat];refreshSave();
+    [].forEach.call(document.querySelectorAll('.c'),function(e){e.textContent=cur});
+    var q=num(d.qty),p=num(d.price);
+    if(!q||!p){
+      ['rw','ur','ex','tx','mg'].forEach(function(i){$(i).textContent='—'});
+      setBig($('total'),'—');setBig($('profit'),'—');return;
+    }
+    var r=compute(d),base=r.base,ur=r.ur,total=r.total,ex=r.ex,tx=r.tx,profit=r.profit;
+    $('rw').textContent=fmt(q)+' × '+fmt(p)+' = '+money(base);
+    $('ur').textContent=d.u?money(ur):'выключена';
+    $('ex').textContent=money(ex);
+    $('tx').textContent=d.t?money(tx):'выключен';
+    setBig($('total'),money(total));
+    setBig($('profit'),(profit<0?'−':'')+money(Math.abs(profit)),profit<0);
+    $('mg').textContent=total?(Math.round(profit/total*1000)/10).toLocaleString('ru-RU')+' %':'—';
+  }
+  ids.forEach(function(id){
+    $(id).addEventListener('input',function(){
+      var k={qty:'qty',price:'price',per:'per',fixed:'fixed',uPct:'uPct',tPct:'tPct'}[id];
+      data[cat][k]=this.value;calc();
+    });
+  });
+  $('tgU').addEventListener('click',function(){data[cat].u=!data[cat].u;load();});
+  $('tgT').addEventListener('click',function(){data[cat].t=!data[cat].t;load();});
+  tabs.forEach(function(t,i){t.addEventListener('click',function(){cat=i;load();});});
+  [].forEach.call(document.querySelectorAll('[data-cur]'),function(b){
+    b.addEventListener('click',function(){
+      cur=b.getAttribute('data-cur');
+      [].forEach.call(document.querySelectorAll('[data-cur]'),function(x){x.setAttribute('aria-pressed',x===b)});
+      calc();
+    });
+  });
+  $('reset').addEventListener('click',function(){data=[blank(),blank(),blank()];load();});
+  $('save').addEventListener('click',saveCalc);
+  $('clearAll').addEventListener('click',function(){saved=[null,null,null];renderSaved();refreshSave();});
+  $('cmp').addEventListener('click',function(e){
+    var b=e.target.closest('[data-del]');if(!b)return;
+    saved[+b.getAttribute('data-del')]=null;renderSaved();refreshSave();
+  });
+  renderSaved();load();
+})();
+</script>
+</body>
+</html>
