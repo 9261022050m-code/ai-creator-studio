@@ -208,7 +208,10 @@ td.neg{color:var(--loss)}
       h+='<tr><th scope="row">'+r[0]+'</th>';
       saved.forEach(function(s,i){
         if(!s){h+='<td class="empty">'+(ri===0?'Пусто':'—')+'</td>';return;}
-        var c=ri===7?(i===best?'best':(s.profit<0?'neg':'')):'';
+        
+var isBest = best >= 0 && s.profit === saved[best].profit;
+var c = ri === 7 ? (isBest ? 'best' : (s.profit < 0 ? 'neg' : '')) : '';
+
         h+='<td'+(c?' class="'+c+'"':'')+'>'+r[1](s)+'</td>';
       });
       h+='</tr>';
